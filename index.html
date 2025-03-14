@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Gallery Prototype</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile-index.css" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="desktop-index.css" media="screen and (min-width: 769px)">
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="top-header">
+        <div class="header-content">
+            <div class="date">Jul 29, 2019</div>
+            <div class="location">Kanab</div>
+            <div class="actions">
+                <button class="select-btn">Select</button>
+                <button class="more-btn">•••</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Back Button -->
+    <button class="back-button" onclick="window.location.href='home.html'">Back</button>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-logo"></div>
+        <div class="sidebar-menu-item"></div>
+        <div class="sidebar-menu-item"></div>
+        <div class="sidebar-menu-item"></div>
+        <div class="sidebar-menu-item"></div>
+        <div class="sidebar-menu-item"></div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content">
+        <!-- Main Image Container for Desktop -->
+        <div class="main-image-container" data-image="red"></div>
+    </div>
+    
+    <!-- Image Slider for Desktop -->
+    <div class="image-slider-container">
+        <div class="slider-track">
+            <div class="thumbnail red" data-image="red"></div>
+            <div class="thumbnail blue" data-image="blue"></div>
+            <div class="thumbnail green" data-image="green"></div>
+            <div class="thumbnail red" data-image="red2"></div>
+            <div class="thumbnail blue" data-image="blue2"></div>
+            <div class="thumbnail green" data-image="green2"></div>
+            <!-- Add more thumbnails for scrolling demonstration -->
+            <div class="thumbnail red" data-image="red3"></div>
+            <div class="thumbnail blue" data-image="blue3"></div>
+            <div class="thumbnail green" data-image="green3"></div>
+        </div>
+        <div class="selector-frame"></div>
+    </div>
+
+    <!-- Grid Container for Mobile -->
+    <div class="grid-container">
+        <!-- Eerste rij -->
+        <div class="grid-item item1"></div>
+        <div class="grid-item item2"></div>
+        <div class="grid-item item3"></div>
+        <!-- Tweede rij -->
+        <div class="grid-item item4"></div>
+        <div class="grid-item item5"></div>
+        <div class="grid-item item6"></div>
+        <!-- Derde rij -->
+        <div class="grid-item item7"></div>
+        <div class="grid-item item8"></div>
+        <div class="grid-item item9"></div>
+        <!-- Extra test rijen -->
+        <div class="grid-item item1"></div>
+        <div class="grid-item item2"></div>
+        <div class="grid-item item3"></div>
+        <div class="grid-item item4"></div>
+        <div class="grid-item item5"></div>
+        <div class="grid-item item6"></div>
+        <div class="grid-item item7"></div>
+        <div class="grid-item item8"></div>
+        <div class="grid-item item9"></div>
+        <div class="grid-item item1"></div>
+        <div class="grid-item item2"></div>
+        <div class="grid-item item3"></div>
+        <div class="grid-item item4"></div>
+        <div class="grid-item item5"></div>
+        <div class="grid-item item6"></div>
+    </div>
+
+    <!-- Profile Section (for Mobile) -->
+    <div class="profile-section">
+        <div class="profile-pic"></div>
+        <div class="profile-info">
+            <div class="profile-info-bar">Lorem ipsum dolor sit amet consectetur</div>
+            <div class="profile-info-bar">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</div>
+        </div>
+    </div>
+
+    <!-- Filter Section (for Mobile) -->
+    <div class="filter-section">
+        <div class="filter-content">
+            <button class="filter-option">Years</button>
+            <button class="filter-option">Months</button>
+            <button class="filter-option active">All</button>
+            <button class="close-button" onclick="window.location.href='home.html'">×</button>
+        </div>
+    </div>
+
+    <script>
+        // Scroll naar de onderkant van de pagina bij het laden (alleen voor mobiel)
+        window.onload = function() {
+            if (window.innerWidth <= 768) {
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        }
+
+        // Header, filter en back button visibility logic (alleen voor mobiel)
+        const header = document.querySelector('.top-header');
+        const filterSection = document.querySelector('.filter-section');
+        const profileSection = document.querySelector('.profile-section');
+        const backButton = document.querySelector('.back-button');
+        
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+
+        function updateUI() {
+            // Only apply this logic on mobile
+            if (window.innerWidth <= 768) {
+                // Get the position and dimensions of the profile section
+                const profileRect = profileSection.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const isProfileVisible = profileRect.top < viewportHeight && profileRect.bottom >= 0;
+                
+                // Show header and filter when profile section is not visible
+                if (!isProfileVisible) {
+                    header.classList.add('visible');
+                    filterSection.classList.add('visible');
+                    backButton.classList.add('hidden');
+                } else {
+                    header.classList.remove('visible');
+                    filterSection.classList.remove('visible');
+                    backButton.classList.remove('hidden');
+                }
+            }
+            
+            ticking = false;
+        }
+
+        // Image slider functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliderTrack = document.querySelector('.slider-track');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            const mainContainer = document.querySelector('.main-image-container');
+            const selectorFrame = document.querySelector('.selector-frame');
+            
+            // Fixed dimensions for consistent positioning
+            const THUMBNAIL_HEIGHT = 80;
+            const THUMBNAIL_GAP = 15;
+            
+            // Configure scrolling speed
+            const SCROLL_DURATION = 400; // ms - verlaagd van 800 naar 400 voor snellere transitie
+            const CLICK_SCROLL_DURATION = 150; // ms - verlaagd van 300 naar 150 voor snellere transitie
+            const SCROLL_DETECTION_DELAY = 300; // ms - iets verlaagd voor snellere detectie
+            
+            // Calculate the center position
+            const viewportHeight = window.innerHeight;
+            const centerPosition = viewportHeight / 2;
+            
+            // Track the last detected center thumbnail to avoid unnecessary updates
+            let lastCenterThumbnailIndex = null;
+            
+            // For detecting when scrolling stops
+            let isScrolling = false;
+            let scrollEndTimeout;
+            let isAnimatingScroll = false;
+            let currentScrollAnimation = null;
+            let isClickTransition = false; // Toegevoegd om klik-transities bij te houden
+            
+            // Initialize with first thumbnail centered in the selector frame
+            window.addEventListener('load', function() {
+                // Update slider position on window load for proper alignment
+                recalculateSliderPosition();
+                centerThumbnailInSelector(0, false);
+            });
+            
+            // Custom smooth scroll function with adjustable duration
+            function smoothScrollTo(element, to, duration) {
+                // Cancel any ongoing animation
+                if (currentScrollAnimation) {
+                    cancelAnimationFrame(currentScrollAnimation);
+                }
+                
+                isAnimatingScroll = true;
+                const start = element.scrollTop;
+                const change = to - start;
+                const startTime = performance.now();
+                
+                // Easing function voor een snelle start en langzaam einde (ease-out)
+                function easeOutQuint(t) {
+                    return 1 - Math.pow(1 - t, 5);
+                }
+                
+                function animateScroll(currentTime) {
+                    const elapsedTime = currentTime - startTime;
+                    
+                    if (elapsedTime >= duration) {
+                        element.scrollTop = to;
+                        isAnimatingScroll = false;
+                        return;
+                    }
+                    
+                    const progress = easeOutQuint(elapsedTime / duration);
+                    element.scrollTop = start + change * progress;
+                    currentScrollAnimation = requestAnimationFrame(animateScroll);
+                }
+                
+                currentScrollAnimation = requestAnimationFrame(animateScroll);
+            }
+            
+            // Function to center a specific thumbnail in the selector
+            function centerThumbnailInSelector(index, animate = true, isClick = false) {
+                if (index < 0 || index >= thumbnails.length) return;
+                
+                const thumbnail = thumbnails[index];
+                
+                // Update main image
+                updateMainImage(thumbnail);
+                
+                // Calculate position to center the thumbnail in the selector frame
+                // Need to account for the extra top padding (50vh) on the slider track
+                const extraPadding = viewportHeight / 2;
+                const scrollPosition = (THUMBNAIL_HEIGHT + THUMBNAIL_GAP) * index + extraPadding - centerPosition + THUMBNAIL_HEIGHT / 2;
+                
+                // Bij klikken markeren we dat we in een klik-transitie zitten
+                if (isClick) {
+                    isClickTransition = true;
+                }
+                
+                // Use custom smooth scrolling with duration based on interaction type
+                if (animate) {
+                    // Als het een klik is, gebruik de snellere transitie
+                    const duration = isClick ? CLICK_SCROLL_DURATION : SCROLL_DURATION;
+                    smoothScrollTo(sliderTrack, scrollPosition, duration);
+                    
+                    // Reset de klik-transitie vlag na de scrollduur
+                    if (isClick) {
+                        setTimeout(() => {
+                            isClickTransition = false;
+                        }, duration + 50); // Kleine extra marge
+                    }
+                } else {
+                    sliderTrack.scrollTop = scrollPosition;
+                    if (isClick) {
+                        isClickTransition = false;
+                    }
+                }
+                
+                // Update the last center thumbnail index
+                lastCenterThumbnailIndex = index;
+            }
+            
+            // Function to update the main image based on a thumbnail
+            function updateMainImage(thumbnail) {
+                // Update main image based on thumbnail class
+                if (thumbnail.classList.contains('red')) {
+                    mainContainer.style.backgroundColor = '#ff0000';
+                } else if (thumbnail.classList.contains('blue')) {
+                    mainContainer.style.backgroundColor = '#0000ff';
+                } else if (thumbnail.classList.contains('green')) {
+                    mainContainer.style.backgroundColor = '#00ff00';
+                }
+                
+                // Update data attribute
+                mainContainer.setAttribute('data-image', thumbnail.getAttribute('data-image'));
+            }
+            
+            // Function to recalculate slider position based on main content width
+            function recalculateSliderPosition() {
+                const mainContent = document.querySelector('.main-content');
+                const mainContentWidth = mainContent.offsetWidth;
+                const sliderContainer = document.querySelector('.image-slider-container');
+                
+                // Ensure selector frame is centered
+                const sliderContainerRect = sliderContainer.getBoundingClientRect();
+                const selectorFrameRect = selectorFrame.getBoundingClientRect();
+                
+                if (Math.abs(selectorFrameRect.top + selectorFrameRect.height/2 - centerPosition) > 1) {
+                    // Adjust if needed
+                    selectorFrame.style.top = '50%';
+                }
+            }
+            
+            // Click handler for thumbnails
+            thumbnails.forEach((thumbnail, index) => {
+                thumbnail.addEventListener('click', function() {
+                    centerThumbnailInSelector(index, true, true); // true voor animatie, true voor klik
+                });
+            });
+            
+            // Find the thumbnail that is closest to the center of the selector frame
+            function findClosestThumbnailIndex() {
+                const selectorRect = selectorFrame.getBoundingClientRect();
+                const selectorCenterY = selectorRect.top + selectorRect.height / 2;
+                
+                let closestThumbnailIndex = 0;
+                let smallestDistance = Infinity;
+                
+                for (let i = 0; i < thumbnails.length; i++) {
+                    const thumbRect = thumbnails[i].getBoundingClientRect();
+                    const thumbCenterY = thumbRect.top + thumbRect.height / 2;
+                    const distance = Math.abs(thumbCenterY - selectorCenterY);
+                    
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestThumbnailIndex = i;
+                    }
+                }
+                
+                return closestThumbnailIndex;
+            }
+            
+            // Find which thumbnail is currently in the center of the selector frame
+            function findCenterThumbnail() {
+                const selectorRect = selectorFrame.getBoundingClientRect();
+                const selectorCenterY = selectorRect.top + selectorRect.height / 2;
+                
+                let closestThumbnail = null;
+                let smallestDistance = Infinity;
+                
+                for (let i = 0; i < thumbnails.length; i++) {
+                    const thumbRect = thumbnails[i].getBoundingClientRect();
+                    // Calculate center of thumbnail
+                    const thumbCenterY = thumbRect.top + thumbRect.height / 2;
+                    const distance = Math.abs(thumbCenterY - selectorCenterY);
+                    
+                    // Keep track of the closest thumbnail to the selector center
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestThumbnail = i;
+                    }
+                }
+                
+                // If any thumbnail is close enough, consider it centered
+                if (smallestDistance < THUMBNAIL_HEIGHT / 2) {
+                    return closestThumbnail;
+                }
+                
+                return null;
+            }
+            
+            // Real-time update of the main image during scrolling
+            sliderTrack.addEventListener('scroll', function() {
+                // Skip if currently animating a programmatic scroll
+                if (isAnimatingScroll) return;
+                
+                // Mark that we're currently scrolling
+                isScrolling = true;
+                
+                // Clear any existing timeout
+                clearTimeout(scrollEndTimeout);
+                
+                // Use requestAnimationFrame for better performance during scrolling
+                requestAnimationFrame(function() {
+                    // Sla real-time updates over als we in een klik-transitie zitten
+                    if (!isClickTransition) {
+                        const centerIndex = findCenterThumbnail();
+                        
+                        // Only update if we found a thumbnail in the center and it's different from the last one
+                        if (centerIndex !== null && centerIndex !== lastCenterThumbnailIndex) {
+                            updateMainImage(thumbnails[centerIndex]);
+                            lastCenterThumbnailIndex = centerIndex;
+                        }
+                    }
+                });
+                
+                // Set a timeout to detect when scrolling stops - with a longer delay
+                scrollEndTimeout = setTimeout(function() {
+                    // If we're still scrolling, we'll clear and reset this timeout
+                    if (isScrolling && !isAnimatingScroll) {
+                        isScrolling = false;
+                        
+                        // Find the closest thumbnail to center it
+                        const closestThumbnailIndex = findClosestThumbnailIndex();
+                        
+                        // Only center if we're not already centered on this thumbnail
+                        if (closestThumbnailIndex !== lastCenterThumbnailIndex) {
+                            centerThumbnailInSelector(closestThumbnailIndex, true, false); // true voor animatie, false voor niet-klik
+                        } else {
+                            // If the thumbnail is already the last centered one, but not perfectly centered
+                            // Center it again for better alignment
+                            const thumbnail = thumbnails[closestThumbnailIndex];
+                            const thumbRect = thumbnail.getBoundingClientRect();
+                            const selectorRect = selectorFrame.getBoundingClientRect();
+                            const thumbCenterY = thumbRect.top + thumbRect.height / 2;
+                            const selectorCenterY = selectorRect.top + selectorRect.height / 2;
+                            
+                            if (Math.abs(thumbCenterY - selectorCenterY) > 1) {
+                                centerThumbnailInSelector(closestThumbnailIndex, true, false); // true voor animatie, false voor niet-klik
+                            }
+                        }
+                    }
+                }, SCROLL_DETECTION_DELAY); // Longer timeout for more relaxed snapping
+            });
+            
+            // Geavanceerde scroll-assist met momentum-scrolling en magnetische snap
+            let lastScrollTime = 0;
+            let scrollVelocity = 0;
+            let lastScrollTop = 0;
+            let scrollTimeoutId = null;
+            
+            // Initialiseer dragScroll functionaliteit
+            function initDragScroll() {
+                let isDragging = false;
+                let startY, startScrollTop, momentumHistory = [];
+                
+                // Voeg touch en muis event listeners toe
+                sliderTrack.addEventListener('mousedown', startDrag);
+                sliderTrack.addEventListener('touchstart', function(e) {
+                    startDrag(e.touches[0]);
+                }, { passive: true });
+                
+                window.addEventListener('mousemove', drag);
+                window.addEventListener('touchmove', function(e) {
+                    drag(e.touches[0]);
+                }, { passive: true });
+                
+                window.addEventListener('mouseup', endDrag);
+                window.addEventListener('touchend', endDrag, { passive: true });
+                
+                function startDrag(e) {
+                    if (isAnimatingScroll) return;
+                    
+                    isDragging = true;
+                    startY = e.clientY || e.pageY;
+                    startScrollTop = sliderTrack.scrollTop;
+                    momentumHistory = [];
+                    
+                    // Stop eventuele lopende animaties
+                    if (currentScrollAnimation) {
+                        cancelAnimationFrame(currentScrollAnimation);
+                        isAnimatingScroll = false;
+                    }
+                    
+                    // Bijhouden voor momentum berekening
+                    momentumHistory.push({
+                        position: startScrollTop,
+                        time: Date.now()
+                    });
+                }
+                
+                function drag(e) {
+                    if (!isDragging) return;
+                    
+                    const y = e.clientY || e.pageY;
+                    const deltaY = startY - y;
+                    const newScrollTop = startScrollTop + deltaY;
+                    
+                    sliderTrack.scrollTop = newScrollTop;
+                    
+                    // Bijhouden voor momentum berekening - max 5 punten
+                    if (momentumHistory.length > 5) {
+                        momentumHistory.shift();
+                    }
+                    
+                    momentumHistory.push({
+                        position: sliderTrack.scrollTop,
+                        time: Date.now()
+                    });
+                }
+                
+                function endDrag() {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    
+                    // Bereken de snelheid op basis van de laatste twee bewegingen
+                    if (momentumHistory.length < 2) return;
+                    
+                    const lastPosition = momentumHistory[momentumHistory.length - 1];
+                    const firstPosition = momentumHistory[0];
+                    
+                    const deltaPosition = lastPosition.position - firstPosition.position;
+                    const deltaTime = lastPosition.time - firstPosition.time;
+                    
+                    // Als er nauwelijks beweging was, snap direct naar de dichtstbijzijnde thumbnail
+                    if (Math.abs(deltaPosition) < 10 || deltaTime > 200) {
+                        const closestIndex = findClosestThumbnailIndex();
+                        centerThumbnailInSelector(closestIndex, true, false);
+                        return;
+                    }
+                    
+                    // Bereken de snelheid en richting voor momentum-scrolling
+                    const velocity = deltaPosition / deltaTime * 15; // Gevoeligheid aanpassen
+                    
+                    applyMomentumScroll(velocity);
+                }
+                
+                function applyMomentumScroll(initialVelocity) {
+                    let velocity = initialVelocity;
+                    let lastTime = Date.now();
+                    let scrollPosition = sliderTrack.scrollTop;
+                    
+                    isAnimatingScroll = true;
+                    
+                    function momentumStep() {
+                        const now = Date.now();
+                        const deltaTime = now - lastTime;
+                        lastTime = now;
+                        
+                        // Wrijving toepassen - hogere waarde = sneller stoppen
+                        velocity *= 0.95;
+                        
+                        // Bereken nieuwe scrollpositie
+                        scrollPosition += velocity * deltaTime / 20;
+                        sliderTrack.scrollTop = scrollPosition;
+                        
+                        // Check of we bijna gestopt zijn
+                        if (Math.abs(velocity) < 0.5) {
+                            isAnimatingScroll = false;
+                            
+                            // Snap naar de dichtstbijzijnde thumbnail met animatie
+                            const closestIndex = findClosestThumbnailIndex();
+                            centerThumbnailInSelector(closestIndex, true, false);
+                            return;
+                        }
+                        
+                        // Ga verder met animeren
+                        currentScrollAnimation = requestAnimationFrame(momentumStep);
+                    }
+                    
+                    currentScrollAnimation = requestAnimationFrame(momentumStep);
+                }
+            }
+            
+            // Start de drag-scroll functionaliteit
+            initDragScroll();
+
+            // Handle window resize to adjust slider positioning
+            window.addEventListener('resize', function() {
+                recalculateSliderPosition();
+                
+                // Re-center the current selected thumbnail
+                const centerIndex = findCenterThumbnail();
+                if (centerIndex !== null) {
+                    centerThumbnailInSelector(centerIndex, true, false); // true voor animatie, false voor niet-klik
+                }
+            });
+        });
+
+        // Optimized scroll handler
+        function onScroll() {
+            lastScrollY = window.scrollY;
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    updateUI();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        // Add both scroll and touch events for better mobile support
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('touchmove', onScroll, { passive: true });
+        window.addEventListener('touchend', onScroll, { passive: true });
+
+        // Listen for window resize to adjust layout
+        window.addEventListener('resize', function() {
+            updateUI();
+        });
+
+        // Initial check
+        updateUI();
+    </script>
+</body>
+</html> 
